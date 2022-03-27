@@ -1,9 +1,13 @@
 class ArticlesController < ApplicationController
   def index
-    render json: {}
+    render json: serializer.new(Article.all), status: :ok
   end
 
   def show
     render json: {}
+  end
+
+  def serializer
+    ArticleSerializer
   end
 end

@@ -4,27 +4,6 @@ require 'user_authenticator'
 RSpec.describe "AccessTokens", type: :request do
   describe '#create' do
 
-    shared_examples_for "unauthorized_requests" do
-      let(:authentication_error) do
-        {
-          status: "401",
-          source: { pointer: "/code" },
-          title:  "Authentication code is invalid",
-          detail: "You must provide valid code in order to exchange it for token."
-        }       
-      end
-      
-      it 'should return 401 status code' do
-        subject
-        expect(response).to have_http_status(401)
-      end
-
-      it 'should return proper error body' do
-        subject
-        expect(json[:errors]).to include(authentication_error)
-      end
-    end
-
     context 'when no code provided' do
       subject { post '/login' }
       it_behaves_like "unauthorized_requests"
@@ -80,26 +59,16 @@ RSpec.describe "AccessTokens", type: :request do
   end
 
   describe '#destroy' do
-    context 'when invalid request' do
-      let(:forbidden_error) do
-        {
-          status: "403",
-          source: { pointer: "/headers/authorization" },
-          title:  "Not authorized",
-          detail: "You have no right to access this resource."
-        }       
-      end
+    subject { delete '/logout', headers: headers}
 
-      subject {delete '/logout'}
+    context 'when no authorization header provided' do
+      let(:headers) {{}}
+      it_behaves_like 'forbidden_requests'
+    end
 
-      it 'should return 403 status code' do
-        subject
-        expect(response).to have_http_status(:forbidden)
-        expect(json[:errors]).to include(forbidden_error)
-      end
-
-      it 'should return proper error json' do
-      end
+    context 'when invalid authorization header provided' do
+      let(:headers) {{ authorization: 'Invalid token' } }
+      it_behaves_like 'forbidden_requests'
     end
 
     context 'when valid request' do
